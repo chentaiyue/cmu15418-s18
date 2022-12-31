@@ -1,0 +1,21 @@
+Rendering to 1000x1000 image
+Loaded scene with 25 circles
+Loaded scene with 25 circles
+---------------------------------------------------------
+Initializing CUDA for CudaRenderer
+Found 1 CUDA devices
+Device 0: NVIDIA GeForce RTX 3090
+   SMs:        82
+   Global mem: 24266 MB
+   CUDA Cap:   8.6
+---------------------------------------------------------
+
+Running benchmark, 1 frames, beginning at frame 0 ...
+Copying image data from device
+***************** Correctness check passed **************************
+Clear:    0.0462 ms
+Advance:  0.0102 ms
+Render:   0.3266 ms
+Total:    0.3829 ms
+
+Overall:  0.0488 sec (note units are seconds)

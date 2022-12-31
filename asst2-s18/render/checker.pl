@@ -81,7 +81,7 @@ foreach my $scene (@scene_names) {
         print ("Your time : $your_time\n");
         $your_times{$scene} = $your_time;
 
-        my $fast_time = `./$render_soln -r $renderMode --bench 0:4 $scene -s $size | tee ./logs/time_${scene}.log | grep Total:`;
+        # my $fast_time = `./$render_soln -r $renderMode --bench 0:4 $scene -s $size | tee ./logs/time_${scene}.log | grep Total:`;
         chomp($fast_time);
         $fast_time =~ s/^[^0-9]*//;
         $fast_time =~ s/ ms.*//;

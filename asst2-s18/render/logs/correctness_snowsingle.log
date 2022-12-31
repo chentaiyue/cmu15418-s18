@@ -1,0 +1,23 @@
+Rendering to 1000x1000 image
+Loaded data for 100000 circles from snow.par
+Loaded scene with 100000 circles
+Loaded data for 100000 circles from snow.par
+Loaded scene with 100000 circles
+---------------------------------------------------------
+Initializing CUDA for CudaRenderer
+Found 1 CUDA devices
+Device 0: NVIDIA GeForce RTX 3090
+   SMs:        82
+   Global mem: 24266 MB
+   CUDA Cap:   8.6
+---------------------------------------------------------
+
+Running benchmark, 1 frames, beginning at frame 0 ...
+Copying image data from device
+***************** Correctness check passed **************************
+Clear:    0.0448 ms
+Advance:  0.0006 ms
+Render:   4.7246 ms
+Total:    4.7700 ms
+
+Overall:  0.2731 sec (note units are seconds)

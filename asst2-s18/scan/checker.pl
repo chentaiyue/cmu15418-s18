@@ -77,11 +77,11 @@ foreach my $element_count (@element_counts) {
     $your_time =~ s/ ms.*//;
     print ("Your Time: $your_time\n"); 
     
-    my $fast_time = `./cudaScan_soln -m ${mode} -i $input -n $element_count $thrust_flag | tee ./logs/soln/${mode}_time_${element_count}.log | grep GPU_time:`;
-    chomp($fast_time);
-    $fast_time =~ s/^[^0-9]*//;
-    $fast_time =~ s/ ms.*//;
-    print ("Target Time: $fast_time\n"); 
+    # my $fast_time = `./cudaScan_soln -m ${mode} -i $input -n $element_count $thrust_flag | tee ./logs/soln/${mode}_time_${element_count}.log | grep GPU_time:`;
+    # chomp($fast_time);
+    # $fast_time =~ s/^[^0-9]*//;
+    # $fast_time =~ s/ ms.*//;
+    # print ("Target Time: $fast_time\n"); 
 
     $your_times{$element_count} = $your_time;
     $fast_times{$element_count} = $fast_time;

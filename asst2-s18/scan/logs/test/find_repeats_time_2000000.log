@@ -1,0 +1,9 @@
+---------------------------------------------------------
+Found 1 CUDA devices
+Device 0: NVIDIA GeForce RTX 3090
+   SMs:        82
+   Global mem: 24266 MB
+   CUDA Cap:   8.6
+---------------------------------------------------------
+GPU_time: 0.414 ms
+Find_repeats outputs are correct!

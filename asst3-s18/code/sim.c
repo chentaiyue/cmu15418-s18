@@ -3,21 +3,12 @@
 /* Compute weight for node nid */
 static inline double compute_weight(state_t *s, int nid) {
     int count = s->rat_count[nid];
-    return mweight((double) count/s->load_factor);
+    return s->memo[count];
 }
 
 /* Compute sum of weights in region of nid */
-static inline double compute_sum_weight(state_t *s, int nid) {
-    graph_t *g = s->g;
-    double sum = 0.0;
-    int eid;
-    int eid_start = g->neighbor_start[nid];
-    int eid_end  = g->neighbor_start[nid+1];
-    int *neighbor = g->neighbor;
-    for (eid = eid_start; eid < eid_end; eid++) {
-	sum += compute_weight(s, neighbor[eid]);
-    }
-    return sum;
+static inline double compute_sum_weight(state_t *s, int nid, int eid_start, int eid_end, double *t) {
+    return t[eid_end - eid_start];
 }
 
 /** DEBUGGING CODE **/
@@ -64,43 +55,62 @@ static inline int next_random_move(state_t *s, int r) {
     int nid = s->rat_position[r];
     int nnid = -1;
     random_t *seedp = &s->rat_seed[r];
-    double tsum = compute_sum_weight(s, nid);
+    double *t = s->binfo[nid];
     graph_t *g = s->g;
-    int eid;
-    
+    int eid_start = g->neighbor_start[nid], eid_end = g->neighbor_start[nid+1];
+    double tsum = compute_sum_weight(s, nid, eid_start, eid_end, t);    
     double val = next_random_float(seedp, tsum);
-
-    double psum = 0.0;
-    for (eid = g->neighbor_start[nid]; eid < g->neighbor_start[nid+1]; eid++) {
-	psum += compute_weight(s, g->neighbor[eid]);
-	if (val < psum) {
-	    nnid = g->neighbor[eid];
-	    break;
-	}
+    int a = eid_start, b = eid_end - 1, mid;
+    while (a <= b) {
+        mid = (a + b) / 2;
+        if (val <= t[mid - eid_start + 1]) {
+            b = mid - 1;
+        } else {
+            a = mid + 1;
+        }
     }
-
-    if (nnid == -1) {
-	/* Shouldn't get here */
-	int degree = g->neighbor_start[nid+1] - g->neighbor_start[nid];
-	outmsg("Internal error.  next_random_move.  Didn't find valid move.  Node %d. Degree = %d, Target = %.2f/%.2f.  Limit = %.2f\n",
-	       nid, degree, val, tsum, psum);
-	nnid = 0;
-    }
-
+    nnid = g->neighbor[a];
     return nnid;
+}
+
+static inline void pre_cal(state_t *s, int nid) {
+    double *t = s->binfo[nid];
+    graph_t *g = s->g;
+    int eid_start = g->neighbor_start[nid], eid_end = g->neighbor_start[nid + 1];
+    int eid;
+    int *neightbor = g->neighbor;
+    t[0] = 0.0;
+    int i = 1;
+    for (eid = eid_start; eid < eid_end; eid++, i++) {
+        t[i] = compute_weight(s, neightbor[eid]) + t[i - 1];
+    }
 }
 
 static void process_batch(state_t *s, int bstart, int bcount) {
     int rid;
-    for (rid = bstart; rid < bstart+bcount; rid++)
-	// Determine where rat will go
-	s->next_rat_position[rid] = next_random_move(s, rid);
+    #if OMP
+    #pragma omp parallel num_threads(s->nthread)
+    {
+        #pragma omp for private(rid) schedule(static)
+    #endif
+        for (rid = 0; rid < s->g->nnode; rid++) {
+            pre_cal(s, rid);
+        }
+    #if OMP
+        #pragma omp for private(rid) schedule(static)
+    #endif
+        for (rid = bstart; rid < bstart+bcount; rid++) {
+            s->next_rat_position[rid] = next_random_move(s, rid);
+        }
+    #if OMP
+    }
+    #endif
     for (rid = bstart; rid < bstart+bcount; rid++) {
-	int onid = s->rat_position[rid];
-	int nnid = s->next_rat_position[rid];
-	s->rat_count[onid]--;
-	s->rat_count[nnid]++;
-	s->rat_position[rid] = nnid;
+        int onid = s->rat_position[rid];
+        int nnid = s->next_rat_position[rid];
+        s->rat_count[onid]--;
+        s->rat_count[nnid]++;
+        s->rat_position[rid] = nnid;
     }
 }
 
@@ -133,6 +143,13 @@ void simulate(state_t *s, int count, update_t update_mode, int dinterval, bool d
 	batch_size = s->batch_size;
 	break;
     }
+    #if OMP
+    #pragma omp parallel for num_threads(s->nthread) private(i)
+    #endif
+    for (i = 0; i <= s->nrat; i++) {
+        s->memo[i] = mweight((double) i / s->load_factor);
+    }
+
     if (display)
 	show(s, show_counts);
     for (i = 0; i < count; i++) {

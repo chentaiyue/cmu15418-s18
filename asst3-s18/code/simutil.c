@@ -60,6 +60,14 @@ static state_t *new_rats(graph_t *g, int nrat, random_t global_seed) {
     ok = ok && s->rat_seed != NULL;
     s->rat_count = int_alloc(nnode);
     ok = ok && s->rat_count != NULL;
+    s->memo = double_alloc(nrat+1);
+    ok = ok && s->memo != NULL;
+    s->binfo = calloc(nnode, sizeof(double *));
+    ok = ok && s->binfo != NULL;
+    for (int i = 0; i < nnode; i++) {
+        int a = g->neighbor_start[i], b = g->neighbor_start[i + 1];
+        s->binfo[i] = double_alloc(b - a + 1);
+    }
     if (!ok) {
 	outmsg("Couldn't allocate space for %d rats", nrat);
 	return NULL;

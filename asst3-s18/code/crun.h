@@ -77,6 +77,8 @@ typedef struct {
 
 /* Representation of simulation state */
 typedef struct {
+  double *memo;
+  double **binfo;
     graph_t *g;
 
     int nrat;

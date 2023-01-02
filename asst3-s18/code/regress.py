@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/home/guest/anaconda3/envs/py2.7/bin/python
 
 # Perform simulator regression test, comparing outputs of different simulators
 

@@ -297,18 +297,72 @@ double cudaFindRepeats(int *input, int length, int *output, int *output_length) 
 
 The score table of our code is as follows:
 ```
+Smartmatch is experimental at ./checker.pl line 75.
+
+--------------
+Running tests on Super-Server, size = 1000, mode = cuda
+--------------
+
+Scene : rgb
+Correctness passed!
+Your time : 0.0887
+Target Time: 
+
+Scene : rgby
+Correctness passed!
+
+Scene : rand10k
+Correctness passed!
+Your time : 1.3729
+Target Time: 
+
+Scene : rand100k
+Correctness passed!
+Your time : 14.3591
+Target Time: 
+
+Scene : biglittle
+Correctness passed!
+Your time : 13.8107
+Target Time: 
+
+Scene : littlebig
+Correctness passed!
+
+Scene : pattern
+Correctness passed!
+Your time : 0.4229
+Target Time: 
+
+Scene : bouncingballs
+Correctness passed!
+
+Scene : hypnosis
+Correctness passed!
+
+Scene : fireworks
+Correctness passed!
+
+Scene : snow
+Correctness passed!
+
+Scene : snowsingle
+Correctness passed!
+Your time : 4.8847
+Target Time: 
+
 ------------
 Score table:
 ------------
 -------------------------------------------------------------------------
 | Scene Name      | Target Time     | Your Time       | Score           |
 -------------------------------------------------------------------------
-| rgb             |                 | 0.1123          | 2               |
-| rand10k         |                 | 3.2523          | 2               |
-| rand100k        |                 | 32.3620         | 2               |
-| pattern         |                 | 0.4322          | 2               |
-| snowsingle      |                 | 4.7675          | 2               |
-| biglittle       |                 | 47.7678         | 2               |
+| rgb             |                 | 0.0887          | 2               |
+| rand10k         |                 | 1.3729          | 2               |
+| rand100k        |                 | 14.3591         | 2               |
+| pattern         |                 | 0.4229          | 2               |
+| snowsingle      |                 | 4.8847          | 2               |
+| biglittle       |                 | 13.8107         | 2               |
 -------------------------------------------------------------------------
 |                                   | Total score:    | 12/72           |
 -------------------------------------------------------------------------
@@ -325,11 +379,11 @@ __global__ void kernelRenderCircles(int *blockCircles, int *tempBlockCircles) {
     int lidx = threadIdx.y * blockDim.y + threadIdx.x;
     int numCirclesPerT = (cuConstRendererParams.numCircles + BLOCKSIZE - 1) / BLOCKSIZE;
     int sIdx = lidx * numCirclesPerT, eIdx = min(sIdx + numCirclesPerT, cuConstRendererParams.numCircles);
-    int blkMinX = blockIdx.y * blockDim.y,
-        blkMinY = blockIdx.x * blockDim.x,
-        blkMaxX = min(blkMinX + blockDim.y, width),
-        blkMaxY = min(blkMinY + blockDim.x, height);
-    int blkId = blockIdx.x + blockDim.y * blockIdx.y;
+    int blkMinY = blockIdx.y * gridDim.y,
+        blkMinX = blockIdx.x * gridDim.x,
+        blkMaxY = min(blkMinY + gridDim.y, height),
+        blkMaxX = min(blkMinX + gridDim.x, width);
+    int blkId = blockIdx.x + gridDim.y * blockIdx.y;
     int *threadTBC = tempBlockCircles + blkId * cuConstRendererParams.numCircles + sIdx;
     uint numOfInterestCircles = 0;
     for (int index = sIdx; index < eIdx; index++) {
@@ -366,8 +420,8 @@ __global__ void kernelRenderCircles(int *blockCircles, int *tempBlockCircles) {
         threadBC[i + prefixSumOutput[lidx]] = threadTBC[i];
     }
     __syncthreads();
-    int xIdx = blockIdx.y * blockDim.y + threadIdx.y,
-        yIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    int yIdx = blockIdx.y * blockDim.y + threadIdx.y,
+        xIdx = blockIdx.x * blockDim.x + threadIdx.x;
     if (xIdx >= width || yIdx >= height) return;
     float invWidth = 1.f / width;
     float invHeight = 1.f / height;
@@ -386,7 +440,7 @@ CudaRenderer::render() {
 
     // 256 threads per block is a healthy number
     dim3 blockDim(BLOCKHEIGHT, BLOCKWIDTH, 1);
-    dim3 gridDim((image->height + blockDim.x - 1) / blockDim.x, (image->width + blockDim.y - 1) / blockDim.y);
+    dim3 gridDim((image->width + blockDim.x - 1) / blockDim.x, (image->height + blockDim.y - 1) / blockDim.y);
     int *blockCircles,
         *tempBlockCircles;
     cudaMalloc(&blockCircles, BLOCKHEIGHT * BLOCKWIDTH * numCircles * sizeof(int));

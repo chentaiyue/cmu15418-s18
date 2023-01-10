@@ -394,11 +394,11 @@ __global__ void kernelRenderCircles(int *blockCircles, int *tempBlockCircles) {
     int lidx = threadIdx.y * blockDim.y + threadIdx.x;
     int numCirclesPerT = (cuConstRendererParams.numCircles + BLOCKSIZE - 1) / BLOCKSIZE;
     int sIdx = lidx * numCirclesPerT, eIdx = min(sIdx + numCirclesPerT, cuConstRendererParams.numCircles);
-    int blkMinX = blockIdx.y * blockDim.y,
-        blkMinY = blockIdx.x * blockDim.x,
-        blkMaxX = min(blkMinX + blockDim.y, width),
-        blkMaxY = min(blkMinY + blockDim.x, height);
-    int blkId = blockIdx.x + blockDim.y * blockIdx.y;
+    int blkMinY = blockIdx.y * gridDim.y,
+        blkMinX = blockIdx.x * gridDim.x,
+        blkMaxY = min(blkMinY + gridDim.y, height),
+        blkMaxX = min(blkMinX + gridDim.x, width);
+    int blkId = blockIdx.x + gridDim.y * blockIdx.y;
     int *threadTBC = tempBlockCircles + blkId * cuConstRendererParams.numCircles + sIdx;
     uint numOfInterestCircles = 0;
     for (int index = sIdx; index < eIdx; index++) {
@@ -435,8 +435,8 @@ __global__ void kernelRenderCircles(int *blockCircles, int *tempBlockCircles) {
         threadBC[i + prefixSumOutput[lidx]] = threadTBC[i];
     }
     __syncthreads();
-    int xIdx = blockIdx.y * blockDim.y + threadIdx.y,
-        yIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    int yIdx = blockIdx.y * blockDim.y + threadIdx.y,
+        xIdx = blockIdx.x * blockDim.x + threadIdx.x;
     if (xIdx >= width || yIdx >= height) return;
     float invWidth = 1.f / width;
     float invHeight = 1.f / height;
@@ -674,7 +674,7 @@ CudaRenderer::render() {
 
     // 256 threads per block is a healthy number
     dim3 blockDim(BLOCKHEIGHT, BLOCKWIDTH, 1);
-    dim3 gridDim((image->height + blockDim.x - 1) / blockDim.x, (image->width + blockDim.y - 1) / blockDim.y);
+    dim3 gridDim((image->width + blockDim.x - 1) / blockDim.x, (image->height + blockDim.y - 1) / blockDim.y);
     int *blockCircles,
         *tempBlockCircles;
     cudaMalloc(&blockCircles, BLOCKHEIGHT * BLOCKWIDTH * numCircles * sizeof(int));

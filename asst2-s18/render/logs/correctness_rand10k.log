@@ -6,16 +6,16 @@ Initializing CUDA for CudaRenderer
 Found 1 CUDA devices
 Device 0: NVIDIA GeForce RTX 3090
    SMs:        82
-   Global mem: 24266 MB
+   Global mem: 24268 MB
    CUDA Cap:   8.6
 ---------------------------------------------------------
 
 Running benchmark, 1 frames, beginning at frame 0 ...
 Copying image data from device
 ***************** Correctness check passed **************************
-Clear:    0.0414 ms
-Advance:  0.0008 ms
-Render:   3.3804 ms
-Total:    3.4226 ms
+Clear:    0.0528 ms
+Advance:  0.0023 ms
+Render:   1.4817 ms
+Total:    1.5368 ms
 
-Overall:  0.4178 sec (note units are seconds)
+Overall:  0.4304 sec (note units are seconds)
